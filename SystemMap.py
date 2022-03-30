@@ -6,26 +6,29 @@ import os
 import sys
 import datetime
 import string
+import Constants
 
 class SystemMap(object):
 	"""Class responsible for building and managing the grid map of the track system"""
 	
-	__X_BOUNDS = 0
-	__Y_BOUNDS = 0
-	__MAX_SIZE = 20
-
 	def __init__(self, size):
-		if size > self.__MAX_SIZE:
+		if size > Constants.MAX_SIZE:
 			raise ValueError("Map Size Out Of Bounds!")
 		else:
 			self.size = size
 
+		# Map is being used for visual and path representation
+		# Obj is being used as mirror for property processing
 		self.map = list()
+		self.obj = list()
 		for i in range(self.size):
-			rows = list()
+			m_rows = list()
+			o_rows = list()
 			for j in range(self.size):
-				rows.append(".")
-			self.map.append(rows)
+				m_rows.append(".")
+				o_rows.append(None)
+			self.map.append(m_rows)
+			self.obj.append(o_rows)
 
 		print("System Builder Created - Map Size {} x {}".format(size, size))
 		print("Origin (0, 0) is at the TOP LEFT corner. All values are positive.")
@@ -33,7 +36,7 @@ class SystemMap(object):
 
 	def __check_valid_coords(self, x, y):
 		"""Private function to check whether (x,y) coordinate on map is valid"""
-		if x <= self.size and x >= self.__X_BOUNDS and y <= self.size and y >= self.__Y_BOUNDS:
+		if x <= self.size and x >= Constants.X_BOUNDS and y <= self.size and y >= Constants.Y_BOUNDS:
 			return True
 
 	def __set_component(self, designator, x, y):

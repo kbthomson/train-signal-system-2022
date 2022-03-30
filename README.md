@@ -1,19 +1,19 @@
 # ecobee-case-study-2022
 
 ### Job Information
+
 Company: ecobee
 Position: Embedded Developer, Test Fixtures
 Case Study: Train Signaling System
 
 ### Contact Information
+
 Submitted By: Kyle Thomson
 Email: kyle.b.thomson@gmail.com
 Cell: 613-301-2339
 
 Embedded Case Study - Train Signaling System
 ==============================================
-
-## Project Description
 
 ### Problem Statement
 
@@ -53,6 +53,11 @@ Table Of Contents
 How To Install and Run
 ========================
 
+### Installation
 
-Instructions For Use
-======================
+No custom installations or libraries required. All source code compatible with Python3.9 base installation.
+Python3.9 is required to run.
+
+### Run
+
+python TrainSignalSystem.py
