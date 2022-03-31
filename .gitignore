@@ -1,0 +1,6 @@
+# Ignore File Types
+.pyc
+.log
+
+# Ignore Folders
+__pycache__

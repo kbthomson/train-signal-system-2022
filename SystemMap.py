@@ -1,93 +1,95 @@
 #!/usr/bin/env python3
 
-"""Class to create system map of train signalling system"""
+"""Class to create and manage the map of the Train Signaling System"""
 
 import os
 import sys
 import datetime
 import string
 import Constants
+from SystemClasses import BeginningPoint, EndPoint, TrackSegment, Signal, Junction, Train
+
 
 class SystemMap(object):
-	"""Class responsible for building and managing the grid map of the track system"""
-	
+	"""Class responsible for building and managing the map (Cartesian grid)"""
 	def __init__(self, size):
 		if size > Constants.MAX_SIZE:
 			raise ValueError("Map Size Out Of Bounds!")
 		else:
-			self.size = size
+			self.__size = size
 
-		# Map is being used for visual and path representation
-		# Obj is being used as mirror for property processing
 		self.map = list()
-		self.obj = list()
-		for i in range(self.size):
-			m_rows = list()
-			o_rows = list()
-			for j in range(self.size):
-				m_rows.append(".")
-				o_rows.append(None)
-			self.map.append(m_rows)
-			self.obj.append(o_rows)
+		for i in range(self.__size):
+			row = [None] * self.__size
+			self.map.append(row)
 
-		print("System Builder Created - Map Size {} x {}".format(size, size))
+		print("System Builder Created - Map Size {} x {}".format(self.__size, self.__size))
 		print("Origin (0, 0) is at the TOP LEFT corner. All values are positive.")
 		self.draw_map()
 
-	def __check_valid_coords(self, x, y):
-		"""Private function to check whether (x,y) coordinate on map is valid"""
-		if x <= self.size and x >= Constants.X_BOUNDS and y <= self.size and y >= Constants.Y_BOUNDS:
+	def get_size(self):
+		return self.__size
+
+	def check_valid_coords(self, x, y):
+		"""Function to check whether (x,y) coordinate on the map are valid"""
+		if x <= self.__size and x >= Constants.X_BOUNDS and y <= self.__size and y >= Constants.Y_BOUNDS:
 			return True
 
-	def __set_component(self, designator, x, y):
-		"""Private function to place component on map at specified coordinates (x, y)"""
-		self.map[x][y] = designator
-
-	def __get_component(self, x, y):
-		"""Private function to get component designator at specified coordinates (x, y)"""
-		return self.map[x][y]
-
-	def __get_surrounding(self, x, y):
-		"""Private function to return surrounding (a, b) coordinates of point (x, y)"""
+	def get_surrounding_coords(self, x, y):
+		"""Function to return valid, surrounding coordinates of point (x, y)"""
 		coords = list()
-		coords.append([x+1, y]) if self.__check_valid_coords(x+1, y) else coords
-		coords.append([x, y+1]) if self.__check_valid_coords(x, y+1) else coords
-		coords.append([x-1, y]) if self.__check_valid_coords(x-1, y) else coords
-		coords.append([x, y-1]) if self.__check_valid_coords(x, y-1) else coords
+		for k in Constants.DIRECTION.keys():
+			direction = Constants.DIRECTION[k]
+			pos = [x, y]
+			pos[0] += direction[0]
+			pos[1] += direction[1]
+			coords.append(pos) if self.check_valid_coords(pos[0], pos[1]) else coords
 		return coords
+
+	def count_surrounding_objects(self, x, y):
+		"""Function to return count of object types surrounding point (x, y)"""
+		surround_obj = list()
+		coords = self.get_surrounding_coords(x, y)
+		for pos in coords:
+			if self.map[pos[0]][pos[1]] is not None:
+				surround_obj.append(self.map[pos[0]][pos[1]].get_type())
+		return surround_obj
 
 	def draw_map(self):
 		"""Outputs current map representation to console"""
 		map_string = ""
-		for i in range(self.size):
-			for j in range(self.size):
-				if j == 0 or j == self.size:
-					map_string += self.map[i][j]
+		for i in range(self.__size):
+			for j in range(self.__size):
+				if j == 0 or j == self.__size:
+					if self.map[i][j] is None:
+						map_string += "."
+					else:
+						map_string += self.map[i][j].get_designator()
 				else:
-					map_string += "   " + self.map[i][j]
+					if self.map[i][j] is None:
+						map_string += "   ."
+					else:
+						map_string += "   " + self.map[i][j].get_designator()
 			map_string += "\n\n"
 		print(map_string)
 
-	def validate_map(self):
-		"""Run self-check on System Map to ensure all behaviour rules are met"""
-		return True
-
 	def place_beginning(self, x, y):
-		"""Place route beginning designator on map"""
-		if self.__check_valid_coords(x, y):
-			self.__set_component("B", x, y)
+		"""Place BeginningPoint object on map"""
+		if self.check_valid_coords(x, y):
+			self.map[x][y] = BeginningPoint(x, y)
+		print("BeginningPoint object added to map ({}, {})".format(x, y))
 		self.draw_map()
-		return True
 
 	def place_endpoint(self, x, y):
-		"""Place route end point designator on map"""
-		if self.__check_valid_coords(x, y):
-			self.__set_component("E", x, y)
+		"""Place EndPoint object map"""
+		if self.check_valid_coords(x, y):
+			self.map[x][y] = EndPoint(x, y)
+		print("EndPoint object added to map ({}, {})".format(x, y))
 		self.draw_map()
-		return True
 
+	'''
 	def place_track(self, x, y):
-		"""Place track segment on map"""
+		"""Place TrackSegment object on map"""
 		component_found = False
 		if self.__check_valid_coords(x, y) and self.__get_component(x, y) == ".":
 			positions = self.__get_surrounding(x, y)
@@ -148,24 +150,18 @@ class SystemMap(object):
 			return False
 		self.draw_map()
 		return True
-
+	'''
 
 if __name__ == '__main__':
-	sb = SystemMap(10)
-	sb.place_beginning(1, 1)
-	sb.place_endpoint(8, 8)
-	sb.place_track(1, 2)
-	sb.place_track(1, 3)
-	sb.place_track(2, 3)
-	sb.place_track(3, 3)
-	sb.place_signal(4, 3)
-	sb.place_track(5, 3)
-	sb.place_track(6, 3)
-	sb.place_track(7, 3)
-	sb.place_track(7, 4)
-	sb.place_track(7, 5)
-	sb.place_junction(7, 6)
-	sb.place_track(7, 7)
-	sb.place_track(7, 8)
-	sb.place_track(8, 6)
-	sb.place_track(8, 7)
+	sm = SystemMap(10)
+	sm.place_beginning(0, 2)
+	sm.place_beginning(1, 1)
+	sm.place_endpoint(2, 2)
+	sm.place_endpoint(1, 3)
+	num = sm.count_surrounding_objects(1, 2)
+	print(num)
+	beg = num.count('Begin')
+	end = num.count('End')
+	print(beg)
+	print(end)
+

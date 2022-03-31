@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
-"""Create base classes for building and running Train Signaling System
+"""Create base classes for objects used to build and run the Train Signaling System
 
 Class list:
+- TrackObject (BaseClass)
+- BeginningPoint
+- EndPoint
 - TrackSegment
 - Signal
 - Junction
@@ -16,163 +19,134 @@ import string
 import Constants
 
 
-class Signal(object):
-	"""Signal class to control the flow of traffic along track segments"""
-
-	def __init__(self, x, y, state):
-		self.x = x
-		self.y = y
-		self.type = "SIGNAL"
-		self.designator = "S"
-		if state.upper() not in Constants.SIGNAL_STATES:
-			raise ValueError("Invalid Signal State Given!")
-		else:
-			self.state = state.upper()
+class TrackObject(object):
+	"""Base class for any object being placed to a coordinate on the map as part of a track"""
+	def __init__(self, x, y, type, designator):
+		self.__x = x
+		self.__y = y
+		self.__type = type
+		self.__designator = designator.upper()
 
 	def get_x(self):
-		return self.x
+		return self.__x
 
 	def get_y(self):
-		return self.y
-
-	def get_pos(self):
-		return [self.x, self.y]
+		return self.__y
 
 	def get_type(self):
-		return self.type
+		return self.__type
 
 	def get_designator(self):
-		return self.designator
-		
+		return self.__designator
+
+	def get_position(self):
+		return [self.__x, self.__y]
+
+	def set_x(self, new_x):
+		if new_x < Constants.X_BOUNDS or new_x > Constants.MAX_SIZE:
+			raise ValueError("Position X value is out of bounds.")
+		self.__x = new_x
+
+	def set_y(self, new_y):
+		if new_y < Constants.Y_BOUNDS or new_y > Constants.MAX_SIZE:
+			raise ValueError("Position Y value is out of bounds.")
+		self.__y = new_y
+
+	def set_type(self, new_type):
+		if type(new_type) is not str:
+			raise TypeError("Type property must be a string value.")
+		self.__type = new_type
+
+	def set_designator(self, new_designator):
+		if len(new_designator) != 1:
+			raise ValueError("Designator property must be a single character.")
+		if type(new_designator) is not str:
+			raise TypeError("Designator property must be a string value.")
+		self.__type = new_type.upper()
+
+	def set_position(self, new_pos):
+		if len(new_pos) != 2:
+			raise IndexError("Position must be array of 2 elements. Length given was: {}".format(len(new_pos)))
+		self.set_x(new_pos[0])
+		self.set_y(new_pos[1])
+
+
+class BeginningPoint(TrackObject):
+	"""Class reprenting the Beginning Track Segment on the grid"""
+	def __init__(self, x, y):
+		super().__init__(x, y, "Begin", "B")
+
+
+class EndPoint(TrackObject):
+	"""Class reprenting the Ending Track Segment on the grid"""
+	def __init__(self, x, y):
+		super().__init__(x, y, "End", "E")
+
+
+class TrackSegment(TrackObject):
+	"""Class reprenting a Track Segment object on the grid"""
+	def __init__(self, x, y):
+		super().__init__(x, y, "TrackSegment", "T")
+
+
+class Signal(TrackObject):
+	"""Class reprenting a Track Segment object with a Signal on the grid"""
+	def __init__(self, x, y, state):
+		super().__init__(x, y, "Signal", "S")
+		self.__state = state
+
 	def get_state(self):
-		return self.state
+		return self.__state
 
 	def set_state(self, new_state):
 		if new_state.upper() not in Constants.SIGNAL_STATES:
-			raise ValueError("Invalid Signal State Given!")
-		else:
-			self.state = new_state.upper()
+			raise ValueError("State must be given value of GREEN or RED only.")
+		self.__state = new_state.upper()
 
 
-class Junction(object):
-	"""Junction class to direct train traffic only to one of the forked tracks at a given time"""
-
+class Junction(TrackObject):
+	"""Class reprenting a Track Junction object on the grid"""
 	def __init__(self, x, y, direction):
-		self.x = x
-		self.y = y
-		self.type = "JUNCTION"
-		self.designator = "J"
-		if direction.upper() not in Constants.DIRECTIONS:
-			raise ValueError("Invalid Junction Direction Given!")
-		else:
-			self.direction = direction.upper()
+		super().__init__(x, y, "Junction", "J")
+		self.__direction = direction
 
-	def get_x(self):
-		return self.x
-
-	def get_y(self):
-		return self.y
-
-	def get_pos(self):
-		return [self.x, self.y]
-
-	def get_type(self):
-		return self.type
-
-	def get_designator(self):
-		return self.designator
-		
 	def get_direction(self):
-		return self.direction
+		return self.__direction
 
 	def set_direction(self, new_direction):
-		if new_direction.upper() not in Constants.DIRECTIONS:
-			raise ValueError("Invalid Junction Direction Given!")
-		else:
-			self.direction = new_direction.upper()
+		if new_direction.upper() not in Constants.DIRECTION.keys():
+			raise ValueError("Direction must be given value of UP, DOWN, LEFT, or RIGHT only.")
+		self.__direction = new_direction.upper()
 
 
-class Train(object):
-	"""Train class represents moving object with starting position and direction moving towards endpoint"""
+class Train(TrackObject):
+	"""Class reprenting a Train object which traverses the map"""
+	def __init__(self, x, y, direction, moving):
+		super().__init__(x, y, "Train", "*")
+		self.__direction = direction
+		self.__moving = moving
 
-	def __init__(self, x, y, direction):
-		self.x = x
-		self.y = y
-		self.type = "TRAIN"
-		self.designator = "*"
-		self.moving = False
-		if direction.upper() not in Constants.DIRECTIONS:
-			raise ValueError("Invalid Junction Direction Given!")
-		else:
-			self.direction = direction.upper()
-
-	def get_x(self):
-		return self.x
-
-	def get_y(self):
-		return self.y
-
-	def get_pos(self):
-		return [self.x, self.y]
-
-	def get_type(self):
-		return self.type
-
-	def get_designator(self):
-		return self.designator
+	def get_direction(self):
+		return self.__direction
 
 	def get_moving(self):
-		return self.moving
-
-	def set_moving(self, bool):
-		if bool:
-			self.moving = True
-		else:
-			self.moving = False
-		
-	def get_direction(self):
-		return self.direction
+		return self.__moving
 
 	def set_direction(self, new_direction):
-		if new_direction.upper() not in Constants.DIRECTIONS:
-			raise ValueError("Invalid Train Direction Given!")
-		else:
-			self.direction = new_direction.upper()
+		if new_direction.upper() not in Constants.DIRECTION.keys():
+			raise ValueError("Direction must be given value of UP, DOWN, LEFT, or RIGHT only.")
+		self.__direction = new_direction.upper()
 
-	def move_train(self, direction):
-		movement = list()
-		if not self.moving:
-			raise Exception("Train Is Stopped - It Must Be Set To Moving First")
-		if direction.upper() not in Constants.DIRECTIONS:
-			raise ValueError("Invalid Train Direction Given!")
+	def set_moving(self, boolean):
+		if type(boolean) is not bool:
+			raise ValueError("Moving property must be a boolean True or False value.")
+		self.__moving = boolean
 
-		if direction == "UP":
-			movement = Constants.UP
-		elif direction == "DOWN":
-			movement = Constants.DOWN	
-		elif direction == "LEFT":
-			movement = Constants.LEFT
-		elif direction == "RIGHT":	
-			movement = Constants.RIGHT
-
-		new_x = self.x + movement[0]
-		new_y = self.y + movement[1]
-		if new_x <= Constants.MAX_SIZE and new_x >= Constants.X_BOUNDS and new_y <= Constants.MAX_SIZE and new_y >= Constants.Y_BOUNDS:
-			self.x = new_x
-			self.y = new_y
-			self.direction = direction
-
-
-if __name__ == '__main__':
-	s = Signal(2, 2, "GREEN")
-	j = Junction(4, 4, "DOWN")
-	t = Train(0, 0, "RIGHT")
-	g1 = t.get_pos()
-	t.set_moving(True)
-	t.move_train("DOWN")
-	t.move_train("DOWN")
-	t.move_train("DOWN")
-	g2 = t.get_pos()
-
-	print(g1)
-	print(g2)		
+	def move(self):
+		if not self.__moving:
+			raise Exception("Train is stopped and must be set in motion before moving.")
+		position = self.get_position()
+		movement = Constants.DIRECTION[self.__direction]
+		position[0] += movement[0]
+		position[1] += movement[1]
+		self.set_position(position)
