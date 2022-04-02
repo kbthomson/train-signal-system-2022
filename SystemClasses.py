@@ -144,7 +144,7 @@ class Train(TrackObject):
 
 	def move(self):
 		if not self.__moving:
-			raise Exception("Train is stopped and must be set in motion before moving")
+			raise ValueError("Train is stopped and must be set in motion before moving")
 		position = self.get_position()
 		movement = Constants.DIRECTION[self.__direction]
 		position[0] += movement[0]
