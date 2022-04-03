@@ -1,10 +1,4 @@
-# ecobee-case-study-2022
-
-### Job Information
-
-Company: ecobee
-Position: Embedded Developer, Test Fixtures
-Case Study: Train Signaling System
+# train-signal-system-2022
 
 ### Contact Information
 
@@ -12,7 +6,7 @@ Submitted By: Kyle Thomson
 Email: kyle.b.thomson@gmail.com
 Cell: 613-301-2339
 
-Embedded Case Study - Train Signaling System
+Train Signaling System
 ==============================================
 
 ### Problem Statement
@@ -58,6 +52,49 @@ How To Install and Run
 No custom installations or libraries required. All source code compatible with Python3.9 base installation.
 Python3.9 is required to run.
 
-### Run
+### 1  Run
 
 python TrainSignalSystem.py
+
+### 2  Define Map Size
+
+Enter size of the train system map with an integer to create an NxN grid.
+
+### 3  Commands
+
+Use the key commands to build, change, inspect, and run the train signal system.
+
+B - Place [B]eginningPoint object on map grid
+    Inputs: x, y
+
+E - Place [E]ndPoint object on map grid
+    Inputs: x, y
+
+T - Place [T]rackSegment object on map grid
+    Inputs: x, y
+
+S - Place [S]ignal object on map grid
+    Inputs: x, y, state ("GREEN, "RED")
+
+J - Place [J]unction object on map grid
+    Inputs: x, y, direction ("UP", "DOWN", "LEFT", "RIGHT")
+
+I - [I]nspect map element for more data
+
+X - Remove or [X]-out map element at specific location
+
+P - Load [P]re-set map configuration
+
+D - [D]raw current map configuration to console
+
+V - [V]alidate map configuration before running
+
+C - [C]lear map back to empty configuration
+
+R - [R]un train on map to start simulation
+
+H - [H]elp function to list all available commands
+
+A - [A]bout the author
+
+Q - [Q]uit
