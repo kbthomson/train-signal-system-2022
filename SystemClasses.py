@@ -62,7 +62,7 @@ class TrackObject(object):
 			raise ValueError("Designator property must be a single character")
 		if type(new_designator) is not str:
 			raise TypeError("Designator property must be a string value")
-		self.__type = new_type.upper()
+		self.__designator = new_designator.upper()
 
 	def set_position(self, new_pos):
 		if len(new_pos) != 2:
@@ -94,6 +94,10 @@ class Signal(TrackObject):
 	def __init__(self, x, y, state):
 		super().__init__(x, y, "Signal", "S")
 		self.__state = state
+		if self.__state == "RED":
+			self.set_designator("R")
+		elif self.__state == "GREEN":
+			self.set_designator("G")
 
 	def get_state(self):
 		return self.__state
@@ -102,6 +106,11 @@ class Signal(TrackObject):
 		if new_state.upper() not in Constants.SIGNAL_STATES:
 			raise ValueError("State must be given value of GREEN or RED only")
 		self.__state = new_state.upper()
+		
+		if self.__state == "RED":
+			self.set_designator("R")
+		elif self.__state == "GREEN":
+			self.set_designator("G")
 
 
 class Junction(TrackObject):
@@ -110,6 +119,15 @@ class Junction(TrackObject):
 		super().__init__(x, y, "Junction", "J")
 		self.__direction = direction
 
+		if self.__direction == "UP":
+			self.set_designator("^")
+		elif self.__direction == "DOWN":
+			self.set_designator("v")
+		elif self.__direction == "LEFT":
+			self.set_designator("<")
+		elif self.__direction == "RIGHT":
+			self.set_designator(">")
+
 	def get_direction(self):
 		return self.__direction
 
@@ -117,6 +135,15 @@ class Junction(TrackObject):
 		if new_direction.upper() not in Constants.DIRECTION.keys():
 			raise ValueError("Direction must be given value of UP, DOWN, LEFT, or RIGHT only")
 		self.__direction = new_direction.upper()
+
+		if self.__direction == "UP":
+			self.set_designator("^")
+		elif self.__direction == "DOWN":
+			self.set_designator("v")
+		elif self.__direction == "LEFT":
+			self.set_designator("<")
+		elif self.__direction == "RIGHT":
+			self.set_designator(">")
 
 
 class Train(TrackObject):

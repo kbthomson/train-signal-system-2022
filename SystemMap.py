@@ -4,8 +4,8 @@
 
 import os
 import sys
-import datetime
 import string
+import datetime
 import Constants
 from queue import Queue
 from SystemClasses import BeginningPoint, EndPoint, TrackSegment, Signal, Junction, Train
@@ -19,11 +19,13 @@ class SystemMap(object):
 		self.__visited = list()
 		self.__begin = [-1, -1]
 		self.__end = [-1, -1]
+
 		for i in range(self.__size):
 			row = [None] * self.__size
 			visit = [False] * self.__size
 			self.__map.append(row)
 			self.__visited.append(visit)
+
 		self.draw_map()
 		print("System Map Created - Size {} x {}".format(self.__size, self.__size))
 		print("Origin (0, 0) is at the TOP LEFT corner - All values are positive\n")
@@ -43,74 +45,36 @@ class SystemMap(object):
 	def get_end(self):
 		return self.__end
 
-	def check_valid_coords(self, x, y):
-		"""Function to check whether (x,y) coordinate on the map are valid"""
-		if x < self.__size and x >= Constants.X_BOUNDS and y < self.__size and y >= Constants.Y_BOUNDS:
-			return True
-
-	def get_surrounding_coords(self, x, y):
-		"""Function to return valid, surrounding coordinates of point (x, y)"""
-		coords = list()
-		for k in Constants.DIRECTION.keys():
-			direction = Constants.DIRECTION[k]
-			pos = [x, y]
-			pos[0] += direction[0]
-			pos[1] += direction[1]
-			coords.append(pos) if self.check_valid_coords(pos[0], pos[1]) else coords
-		return coords
-
-	def get_travel_coords(self, x, y):
-		"""Function to return surrounding coordinates of point (x, y) which may be traversed"""
-		coords = list()
-		for k in Constants.DIRECTION.keys():
-			direction = Constants.DIRECTION[k]
-			pos = [x, y]
-			pos[0] += direction[0]
-			pos[1] += direction[1]
-			if self.check_valid_coords(pos[0], pos[1]) and self.__map[pos[0]][pos[1]] is not None:
-				coords.append(pos)
-		return coords
-
 	def add_coords(self, pos1, pos2):
 		"""Adds set of (x1, y1) coordinates to (x2, y2) coordinates and returns"""
 		new_x = pos1[0] + pos2[0]
 		new_y = pos1[1] + pos2[1]
 		return [new_x, new_y]
 
-	def get_surrounding_objects(self, x, y):
-		"""Function to return count of object types surrounding point (x, y)"""
-		surround_obj = list()
-		coords = self.get_surrounding_coords(x, y)
-		for pos in coords:
-			if self.__map[pos[0]][pos[1]] is not None:
-				surround_obj.append(self.__map[pos[0]][pos[1]].get_type())
-		return surround_obj
+	def check_valid_coords(self, x, y):
+		"""Function to check whether (x,y) coordinate on the map are valid"""
+		if x < self.__size and x >= Constants.X_BOUNDS and y < self.__size and y >= Constants.Y_BOUNDS:
+			return True
+		return False
 
-	def draw_map(self, train=None):
-		"""Outputs current map representation to console"""
-		map_string = ""
-		for i in range(self.__size):
-			for j in range(self.__size):
-				if j == 0 or j == self.__size:
-					if self.__map[i][j] is None:
-						map_string += "."
-					else:
-						if train is not None and j == train.get_x() and i == train.get_y():
-							map_string += train.get_designator()
-						else:
-							map_string += self.__map[j][i].get_designator()
-				else:
-					if self.__map[j][i] is None:
-						map_string += "   ."
-					else:
-						if train is not None and j == train.get_x() and i == train.get_y():
-							map_string += "   " + train.get_designator()
-						else:
-							map_string += "   " + self.__map[j][i].get_designator()
-			map_string += "\n\n"
-		print(map_string)
+	def get_surrounding_data(self, x, y):
+		"""Function to return valid, surrounding coordinates of point (x, y)"""
+		coords = list()
+		travels = list()
+		types = list()
 
-	def inspect_coordinate(self, x, y):
+		for k in Constants.DIRECTION.keys():
+			direction = Constants.DIRECTION[k]
+			pos = self.add_coords([x, y], direction)
+			if self.check_valid_coords(pos[0], pos[1]):
+				coords.append(pos)
+				if self.__map[pos[0]][pos[1]] is not None:
+					travels.append(pos)
+					types.append(self.__map[pos[0]][pos[1]].get_type())
+
+		return coords, travels, types
+
+	def inspect_object(self, x, y):
 		"""Outputs string representation of common object properties at location (x, y)"""
 		obj = self.__map[x][y]
 		if obj is None:
@@ -135,51 +99,6 @@ class SystemMap(object):
 		self.__map[x][y] = None
 		self.__visited[x][y] = False
 		print("Map object removed at ({}, {}) - coordinate is now 'None'\n".format(x, y))
-
-	def validate_direction(self, obj):
-		"""Check placement of object with direction property on map"""
-		x = obj.get_x()
-		y = obj.get_y()
-		tmp_move = Constants.DIRECTION[obj.get_direction()]
-		check_dir = [x+tmp_move[0], y+tmp_move[1]]
-		if self.__map[check_dir[0]][check_dir[1]] is None:
-			print("Invalid Direction property for TrackObject at ({}, {})".format(x, y))
-			print("Map must have object in Direction of movement\n")
-			return False
-		return True
-
-	def validate_map(self):
-		"""Check placement of all objects on map before running"""
-		b_count = 0
-		e_count = 0
-		for i in range(self.__size):
-			for j in range(self.__size):
-				nearby = list()
-				if self.__map[i][j] is not None:
-					nearby = self.get_surrounding_objects(i, j)
-					if self.__map[i][j].get_type() == "Junction":
-						if not self.validate_direction(self.__map[i][j]):
-							return False
-						elif len(nearby) < 3:
-							print("Invalid placement of Junction at ({}, {})".format(i, j))
-							print("Junctions must have at least 3 surrounding objects\n")
-							return False
-					else:
-						if self.__map[i][j].get_type() == "Begin":
-							b_count += 1
-						if self.__map[i][j].get_type() == "End":
-							e_count += 1
-						if len(nearby) < 1:
-							print("Invalid placement of Track Object at ({}, {})".format(i, j))
-							print("Track Objects must have at least 1 surrounding objects\n")
-							return False
-		if b_count != 1:
-			print("Map must have 1 BeginningPoint defined to run\n")
-			return False
-		if e_count != 1:
-			print("Map must have 1 EndPoint defined to run\n")
-			return False
-		return True
 
 	def place_beginning(self, x, y):
 		"""Place BeginningPoint object on map"""
@@ -228,17 +147,86 @@ class SystemMap(object):
 		else:
 			raise ValueError("Invalid X, Y coordinate given at ({}, {})".format(x, y))
 
+	def draw_map(self, train=None):
+		"""Outputs current map representation to console"""
+		map_string = ""
+		for i in range(self.__size):
+			for j in range(self.__size):
+
+				if j == 0 or j == self.__size:
+					if self.__map[i][j] is None:
+						map_string += "."
+					else:
+						if train is not None and j == train.get_x() and i == train.get_y():
+							map_string += train.get_designator()
+						else:
+							map_string += self.__map[j][i].get_designator()
+
+				else:
+					if self.__map[j][i] is None:
+						map_string += "   ."
+					else:
+						if train is not None and j == train.get_x() and i == train.get_y():
+							map_string += "   " + train.get_designator()
+						else:
+							map_string += "   " + self.__map[j][i].get_designator()
+
+			map_string += "\n\n"
+		print(map_string)
+
+	def validate_map(self):
+		"""Check placement of all objects on map before running"""
+		b_count = 0
+		e_count = 0
+		for i in range(self.__size):
+			for j in range(self.__size):
+
+				if self.__map[i][j] is not None:
+					coords, travels, types = self.get_surrounding_data(i, j)
+
+					if self.__map[i][j].get_type() == "Junction":
+						temp_move = Constants.DIRECTION[self.__map[i][j].get_direction()]
+						if temp_move not in travels:
+							print("Invalid Direction property for TrackObject at ({}, {})".format(x, y))
+							print("Map must have object in Direction of movement\n")
+							return False
+						elif len(types) < 3:
+							print("Invalid placement of Junction at ({}, {})".format(i, j))
+							print("Junctions must have at least 3 surrounding objects\n")
+							return False
+
+					else:
+						if self.__map[i][j].get_type() == "Begin":
+							b_count += 1
+						if self.__map[i][j].get_type() == "End":
+							e_count += 1
+						if len(types) < 1:
+							print("Invalid placement of Track Object at ({}, {})".format(i, j))
+							print("Track Objects must have at least 1 surrounding objects\n")
+							return False
+
+		if b_count != 1:
+			print("Map must have 1 BeginningPoint defined to run\n")
+			return False
+		if e_count != 1:
+			print("Map must have 1 EndPoint defined to run\n")
+			return False
+
+		return True
+
 	def clear_map(self):
 		"""Clears all objects in a train map to reset the grid"""
 		self.__map = list()
 		self.__visited = list()
 		self.__begin = [-1, -1]
 		self.__end = [-1, -1]
+
 		for i in range(self.__size):
 			row = [None] * self.__size
 			visit = [False] * self.__size
 			self.__map.append(row)
 			self.__visited.append(visit)
+
 		self.draw_map()
 		print("System Map Reset - Size {} x {}".format(self.__size, self.__size))
 		print("Origin (0, 0) is at the TOP LEFT corner - All values are positive\n")
@@ -249,11 +237,11 @@ class SystemMap(object):
 		self.place_track(2, 1)
 		self.place_junction(3, 1, "RIGHT")
 		self.place_track(4, 1)
-		self.place_track(5, 1)
+		self.place_signal(5, 1, "RED") # Change to RED for Signal example
 		self.place_track(5, 2)
 		self.place_junction(5, 3, "DOWN")
 		self.place_track(5, 4)
-		self.place_junction(5, 5, "RIGHT")
+		self.place_junction(5, 5, "DOWN") # Change to RIGHT for Junction example
 		self.place_track(5, 6)
 		self.place_junction(5, 7, "DOWN")
 		self.place_track(5, 8)
@@ -265,7 +253,7 @@ class SystemMap(object):
 		self.place_signal(8, 3, "RED")
 		self.place_track(9, 3)
 		self.place_track(9, 4)
-		self.place_junction(9, 5, "LEFT")
+		self.place_junction(9, 5, "DOWN")
 		self.place_track(8, 5)
 		self.place_track(7, 5)
 		self.place_track(6, 5)
@@ -274,17 +262,17 @@ class SystemMap(object):
 		self.place_track(3, 2)
 		self.place_signal(3, 3, "GREEN")
 		self.place_track(2, 3)
-		self.place_junction(1, 3, "DOWN")
+		self.place_junction(1, 3, "DOWN") # Change to UP for Junction example
 		self.place_track(1, 4)
-		self.place_signal(1, 5, "RED")
+		self.place_signal(1, 5, "GREEN") # Change to RED for Signal example
 		self.place_track(1, 6)
 		self.place_track(1, 7)
 		self.place_track(2, 7)
-		self.place_signal(3, 7, "GREEN")
+		self.place_signal(3, 7, "GREEN") # Change to RED for Signal example
 		self.place_track(4, 7)
 
 		self.place_track(9, 6)
-		self.place_signal(9, 7, "RED")
+		self.place_signal(9, 7, "GREEN")
 		self.place_track(9, 8)
 
 		self.place_endpoint(8, 8)
@@ -297,41 +285,83 @@ class SystemMap(object):
 		q = Queue()
 		q.put(q_start)
 		self.__visited[self.__begin[0]][self.__begin[1]] == True
+
 		while q.qsize() != 0:
 			q_obj = q.get()
 			node = q_obj[0]
 			path = q_obj[1]
+
 			if node == self.__end:
 				return True, path
-			possible_moves = self.get_travel_coords(node[0], node[1])
+			
+			coords, travels, types = self.get_surrounding_data(node[0], node[1])
 			move_up = self.add_coords(node, Constants.DIRECTION["UP"])
 			move_down = self.add_coords(node, Constants.DIRECTION["DOWN"])
 			move_left = self.add_coords(node, Constants.DIRECTION["LEFT"])
 			move_right = self.add_coords(node, Constants.DIRECTION["RIGHT"])
 
-			'''
-			junct_dir = self.__map[node[0]][node[1]].get_direction()
-			junct_coords = self.add_coords(node, Constants.DIRECTION[junct_dir])
-			if junct_coords not in possible_moves:
-			'''
+			if self.__map[node[0]][node[1]].get_type() == "Signal":
+				if self.__map[node[0]][node[1]].get_state() == "RED":
+					path_wait = path + ["SIGNAL-CHANGE-RED-TO-GREEN"]
+					q.put([node, path_wait])
+					self.__visited[node[0]][node[1]] == True
+					self.__map[node[0]][node[1]].set_state("GREEN")
+					continue
 
-			if move_up in possible_moves and self.__visited[move_up[0]][move_up[1]] == False:
+			elif self.__map[node[0]][node[1]].get_type() == "Junction":
+				junct_dir = self.__map[node[0]][node[1]].get_direction()
+				junct_coord = self.add_coords(node, Constants.DIRECTION[junct_dir])
+
+				if junct_coord in travels:
+					junct_path = path + [junct_dir]
+					q.put([junct_coord, junct_path])
+					self.__visited[junct_coord[0]][junct_coord[1]] == True
+					continue
+
+			if move_up in travels and self.__visited[move_up[0]][move_up[1]] == False:
 				path_up = path + ["UP"]
 				q.put([move_up, path_up])
 				self.__visited[move_up[0]][move_up[1]] == True
-			if move_down in possible_moves and self.__visited[move_down[0]][move_down[1]] == False:
+
+			if move_down in travels and self.__visited[move_down[0]][move_down[1]] == False:
 				path_down = path + ["DOWN"]
 				q.put([move_down, path_down])
 				self.__visited[move_down[0]][move_down[1]] == True
-			if move_left in possible_moves and self.__visited[move_left[0]][move_left[1]] == False:
+
+			if move_left in travels and self.__visited[move_left[0]][move_left[1]] == False:
 				path_left = path + ["LEFT"]
 				q.put([move_left, path_left])
 				self.__visited[move_left[0]][move_left[1]] == True
-			if move_right in possible_moves and self.__visited[move_right[0]][move_right[1]] == False:
+
+			if move_right in travels and self.__visited[move_right[0]][move_right[1]] == False:
 				path_right = path + ["RIGHT"]
 				q.put([move_right, path_right])
 				self.__visited[move_right[0]][move_right[1]] == True
+
 		return False, []
+
+	def drive_train(self, x, y, path):
+		"""Animate Train object travelling along the found path on the system map in console"""
+		print("!!! Train is leaving the station !!!")
+		t = Train(self.__begin[0], self.__begin[1], path[0], False)
+		sm.draw_map(t)
+		time.sleep(1)
+
+		for moves in path:
+			if moves not in Constants.DIRECTION.keys():
+				print("!!! Train stopping to wait for track action !!!")
+				print("Action: {}".format(moves))
+				t.set_moving(False)
+				time.sleep(2)
+			else:
+				t.set_direction(moves)
+				t.set_moving(True)
+				t.move()
+				time.sleep(1)
+			sm.draw_map(t)
+
+		print("!!! Train has arrived !!!")
+		return True
 
 '''
 if __name__ == '__main__':

@@ -19,6 +19,7 @@ DIRECTION = {
 }
 
 CMD_LIST = ["B", "E", "T", "S", "J", "I", "X", "P", "D", "V", "C", "R", "H", "A", "Q"]
+
 CMD_STR = """
 B - Place [B]eginningPoint object on map grid
     Inputs: x, y
