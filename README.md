@@ -3,7 +3,9 @@
 ### Contact Information
 
 Submitted By: Kyle Thomson
+
 Email: kyle.b.thomson@gmail.com
+
 Cell: 613-301-2339
 
 Train Signaling System
@@ -39,28 +41,23 @@ You may choose to implement one or more of the following optional features:
 - Implement support for multiple trains running concurrently.
 - Implement support for trains longer than one track segment.
 
-
-Table Of Contents
-===================
-
-
 How To Install and Run
 ========================
 
-### Installation
+### 1  Installation
 
 No custom installations or libraries required. All source code compatible with Python3.9 base installation.
 Python3.9 is required to run.
 
-### 1  Run
+### 2  Run
 
 python TrainSignalSystem.py
 
-### 2  Define Map Size
+### 3  Define Map Size
 
 Enter size of the train system map with an integer to create an NxN grid.
 
-### 3  Commands
+### 4  Commands
 
 Use the key commands to build, change, inspect, and run the train signal system.
 

@@ -4,6 +4,7 @@
 
 import os
 import sys
+import time
 import string
 import datetime
 import Constants
@@ -98,6 +99,7 @@ class SystemMap(object):
 		"""Remove or reset element at location (x, y) from the map"""
 		self.__map[x][y] = None
 		self.__visited[x][y] = False
+		self.draw_map()
 		print("Map object removed at ({}, {}) - coordinate is now 'None'\n".format(x, y))
 
 	def place_beginning(self, x, y):
@@ -185,9 +187,10 @@ class SystemMap(object):
 					coords, travels, types = self.get_surrounding_data(i, j)
 
 					if self.__map[i][j].get_type() == "Junction":
-						temp_move = Constants.DIRECTION[self.__map[i][j].get_direction()]
+						dir_move = Constants.DIRECTION[self.__map[i][j].get_direction()]
+						temp_move = self.add_coords([i, j], dir_move)
 						if temp_move not in travels:
-							print("Invalid Direction property for TrackObject at ({}, {})".format(x, y))
+							print("Invalid Direction property for TrackObject at ({}, {})".format(i, j))
 							print("Map must have object in Direction of movement\n")
 							return False
 						elif len(types) < 3:
@@ -340,11 +343,11 @@ class SystemMap(object):
 
 		return False, []
 
-	def drive_train(self, x, y, path):
+	def drive_train(self, path):
 		"""Animate Train object travelling along the found path on the system map in console"""
 		print("!!! Train is leaving the station !!!")
 		t = Train(self.__begin[0], self.__begin[1], path[0], False)
-		sm.draw_map(t)
+		self.draw_map(t)
 		time.sleep(1)
 
 		for moves in path:
@@ -358,16 +361,7 @@ class SystemMap(object):
 				t.set_moving(True)
 				t.move()
 				time.sleep(1)
-			sm.draw_map(t)
+			self.draw_map(t)
 
 		print("!!! Train has arrived !!!")
 		return True
-
-'''
-if __name__ == '__main__':
-	sm = SystemMap(10)
-	sm.preset_map()
-	result, path = sm.map_bfs()
-	print(result)
-	print(path)
-'''

@@ -116,7 +116,7 @@ def TrainSignalSystem():
 					print("Move #{} - {}".format(i+1, path[i]))
 				print("Do you want to view the Train travelling along path found?\n")
 				if UI.GetUserConfirmation():
-					sm.drive_train()
+					sm.drive_train(path)
 			else:
 				print("XXX Error, path could not be completed between BeginningPoint and EndPoint XXX")
 				print("Please review the system map layout and run the simaulation again\n")
