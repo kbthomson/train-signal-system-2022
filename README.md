@@ -3,10 +3,7 @@
 ### Contact Information
 
 Submitted By: Kyle Thomson
-
 Email: kyle.b.thomson@gmail.com
-
-Cell: 613-301-2339
 
 Train Signaling System
 ==============================================
